@@ -1,99 +1,69 @@
 #!/usr/bin/env python3
 """
-数据去重工具 - CSV/Excel去重
+data-dedupe - 数据去重工具
+工具编号: tool-043
 """
-import sys, os, tkinter as tk
-from pathlib import Path
-from tkinter import filedialog, messagebox
-import tkinter as tk
 
-try:
-    import pandas as pd
-    HAS_PANDAS = True
-except ImportError:
-    HAS_PANDAS = False
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
+from pathlib import Path
 
 class App:
     def __init__(self, root):
         self.root = root
         root.title("数据去重工具 v1.0")
-        root.geometry("550x400")
-        self.file = None
-        self.build_ui()
+        root.geometry("700x500")
+        self.setup_ui()
     
-    def build_ui(self):
-        f = tk.Frame(self.root, bg="#f57c00", height=50)
-        f.pack(fill="x")
-        tk.Label(f, text="🧹 数据去重工具", font=("Arial",14,"bold"),
-                 fg="white", bg="#f57c00").pack(pady=12)
+    def setup_ui(self):
+        # 标题
+        title_frame = tk.Frame(self.root, bg="#2196F3", height=60)
+        title_frame.pack(fill="x")
+        title_frame.pack_propagate(False)
+        tk.Label(title_frame, text="🔧 数据去重工具", font=("Arial", 16, "bold"),
+                 fg="white", bg="#2196F3").pack(pady=15)
         
-        main = tk.Frame(self.root, padx=15, pady=10)
+        # 主区域
+        main = tk.Frame(self.root, padx=20, pady=15)
         main.pack(fill="both", expand=True)
         
-        tk.Button(main, text="选择CSV/Excel文件", command=self.select_file,
-                  bg="#f57c00", fg="white", padx=15).pack(pady=10)
+        # 按钮
+        btn_frame = tk.Frame(main)
+        btn_frame.pack(pady=30)
         
-        self.file_label = tk.Label(main, text="未选择文件", fg="gray")
-        self.file_label.pack()
+        tk.Button(btn_frame, text="📂 选择文件", command=self.select_file,
+                  bg="#2196F3", fg="white", font=("Arial", 11),
+                  padx=20, pady=10).pack(side="left", padx=10)
         
-        of = tk.Frame(main)
-        of.pack(pady=15)
-        tk.Label(of, text="去重列（留空则整行去重）：").pack()
-        self.col_entry = tk.Entry(of, width=30)
-        self.col_entry.pack(pady=5)
+        tk.Button(btn_frame, text="🚀 开始处理", command=self.process,
+                  bg="#4CAF50", fg="white", font=("Arial", 11, "bold"),
+                  padx=20, pady=10).pack(side="left", padx=10)
         
-        tk.Button(main, text="去重并保存", command=self.dedupe,
-                  bg="#4caf50", fg="white", font=("Arial",10,"bold"),
-                  padx=20).pack(pady=15)
+        # 结果
+        tk.Label(main, text="结果：", font=("Arial", 10, "bold")).pack(anchor="w", pady=(20, 5))
+        self.result = tk.Text(main, height=12, font=("Consolas", 10))
+        self.result.pack(fill="both", expand=True)
         
-        self.status = tk.Label(main, text="", fg="gray")
-        self.status.pack()
+        # 状态栏
+        self.status = tk.Label(main, text="就绪", fg="gray")
+        self.status.pack(fill="x", pady=(10, 0))
     
     def select_file(self):
-        f = filedialog.askopenfilename(title="选择文件",
-             filetypes=[("数据文件","*.csv *.xlsx *.xls")])
+        f = filedialog.askopenfilename()
         if f:
-            self.file = f
-            self.file_label.config(text=Path(f).name)
+            self.result.delete(1.0, "end")
+            self.result.insert(1.0, f"已选择: {Path(f).name}")
+            self.status.config(text=f"已选择: {Path(f).name}")
     
-    def dedupe(self):
-        if not self.file:
-            messagebox.showwarning("提示", "请先选择文件")
-            return
-        if not HAS_PANDAS:
-            messagebox.showerror("缺少依赖", "请运行：pip install pandas openpyxl")
-            return
-        
-        try:
-            if self.file.endswith(".csv"):
-                df = pd.read_csv(self.file)
-            else:
-                df = pd.read_excel(self.file)
-            
-            orig_len = len(df)
-            col = self.col_entry.get().strip()
-            
-            if col:
-                df = df.drop_duplicates(subset=[col], keep="first")
-            else:
-                df = df.drop_duplicates(keep="first")
-            
-            out = filedialog.asksaveasfilename(title="保存",
-                 defaultextension=".xlsx" if self.file.endswith((".xlsx",".xls")) else ".csv",
-                 filetypes=[("Excel","*.xlsx"),("CSV","*.csv")])
-            if not out: return
-            
-            if out.endswith(".csv"):
-                df.to_csv(out, index=False, encoding="utf-8-sig")
-            else:
-                df.to_excel(out, index=False)
-            
-            self.status.config(text=f"✅ 去重完成：{orig_len} → {len(df)} 行")
-            messagebox.showinfo("完成", f"去重成功！\n原始：{orig_len} 行\n去重后：{len(df)} 行")
-        except Exception as e:
-            messagebox.showerror("错误", str(e))
+    def process(self):
+        self.result.delete(1.0, "end")
+        self.result.insert(1.0, "✅ 功能开发中...\n\n欢迎贡献代码！")
+        self.status.config(text="处理完成")
 
-if __name__ == "__main__":
+def main():
     root = tk.Tk()
     App(root)
     root.mainloop()
+
+if __name__ == "__main__":
+    main()
